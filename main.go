@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"time"
 
-	v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
@@ -41,24 +44,39 @@ func main() {
 		FieldSelector: field,
 	}
 
-	watcher, err := clientset.CoreV1().Services(ns).Watch(listOptions)
-	if err != nil {
-		klog.Fatal(err)
-	}
+	ds := NewDatastore()
 
-	ch := watcher.ResultChan()
-	for event := range ch {
-		service := event.Object.(*v1.Service)
+	watcher := NewWatcher(ns, listOptions, clientset, ds)
 
-		if service.Spec.Type != "NodePort" {
-			continue
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := &sync.WaitGroup{}
+	watcher.Run(ctx, wg)
+
+	go func(d *Datastore, c context.Context) {
+		ticker := time.NewTicker(1 * time.Second)
+
+		for {
+			select {
+			case <-c.Done():
+				return
+			case <-ticker.C:
+				fmt.Println("=========")
+				fmt.Println("Endpoints")
+				fmt.Println("=========")
+
+				for _, endpoint := range d.GetEndpoints() {
+					fmt.Println(endpoint)
+				}
+			}
 		}
+	}(ds, ctx)
 
-		switch event.Type {
-		case watch.Added:
-			fmt.Printf("Added - %v:%v\n", service.Spec.ClusterIP, service.Spec.Ports[0].NodePort)
-		case watch.Deleted:
-			fmt.Printf("Deleted - %v:%v\n", service.Spec.ClusterIP, service.Spec.Ports[0].NodePort)
-		}
-	}
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	<-stop
+
+	cancel()
+
+	wg.Wait()
 }
