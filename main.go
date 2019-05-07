@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -14,6 +13,7 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 	"github.com/envoyproxy/go-control-plane/pkg/test"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -22,6 +22,8 @@ import (
 )
 
 func main() {
+	logger := logrus.New()
+
 	var kubeconfig, master string
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
 	flag.StringVar(&master, "master", "", "master url")
@@ -50,7 +52,7 @@ func main() {
 		FieldSelector: field,
 	}
 
-	snapshotCache := cache.NewSnapshotCache(false, test.Hasher{}, nil)
+	snapshotCache := cache.NewSnapshotCache(false, test.Hasher{}, logger)
 	ds := NewDatastore(snapshotCache)
 
 	watcher := NewWatcher(ns, listOptions, clientset, ds)
@@ -71,7 +73,7 @@ func main() {
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}()
 

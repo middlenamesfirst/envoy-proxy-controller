@@ -54,6 +54,10 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
+# github.com/rs/zerolog v1.14.3
+github.com/rs/zerolog
+github.com/rs/zerolog/internal/cbor
+github.com/rs/zerolog/internal/json
 # github.com/sirupsen/logrus v1.4.1
 github.com/sirupsen/logrus
 # github.com/spf13/pflag v1.0.1
