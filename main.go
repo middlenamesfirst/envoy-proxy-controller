@@ -3,12 +3,18 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
+	"log"
+	"net"
 	"os"
 	"os/signal"
 	"sync"
-	"time"
 
+	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
+	"github.com/envoyproxy/go-control-plane/pkg/cache"
+	xds "github.com/envoyproxy/go-control-plane/pkg/server"
+	"github.com/envoyproxy/go-control-plane/pkg/test"
+	"google.golang.org/grpc"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -44,7 +50,8 @@ func main() {
 		FieldSelector: field,
 	}
 
-	ds := NewDatastore()
+	snapshotCache := cache.NewSnapshotCache(false, test.Hasher{}, nil)
+	ds := NewDatastore(snapshotCache)
 
 	watcher := NewWatcher(ns, listOptions, clientset, ds)
 
@@ -52,24 +59,21 @@ func main() {
 	wg := &sync.WaitGroup{}
 	watcher.Run(ctx, wg)
 
-	go func(d *Datastore, c context.Context) {
-		ticker := time.NewTicker(5 * time.Second)
+	server := xds.NewServer(snapshotCache, nil)
+	grpcServer := grpc.NewServer()
+	lis, _ := net.Listen("tcp", ":5678")
 
-		for {
-			select {
-			case <-c.Done():
-				return
-			case <-ticker.C:
-				fmt.Println("=========")
-				fmt.Println("Endpoints")
-				fmt.Println("=========")
+	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
+	api.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
+	api.RegisterClusterDiscoveryServiceServer(grpcServer, server)
+	api.RegisterRouteDiscoveryServiceServer(grpcServer, server)
+	api.RegisterListenerDiscoveryServiceServer(grpcServer, server)
 
-				for _, endpoint := range d.GetEndpoints() {
-					fmt.Println(endpoint)
-				}
-			}
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatal(err)
 		}
-	}(ds, ctx)
+	}()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)

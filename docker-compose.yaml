@@ -3,6 +3,12 @@ services:
   envoy-proxy-controller:
     build: .
     ports:
-    - "5678:5678"
+      - 5678:5678
     volumes:
-    - "$HOME/.kube/configs/envoy-proxy-controller:/root/config"
+      - "$HOME/.kube/configs/envoy-proxy-controller:/root/config"
+
+  envoy:
+    build:
+      context: docker-envoy-proxy
+    ports:
+      - 9901:9901

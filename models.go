@@ -6,7 +6,7 @@ import (
 
 type Endpoint struct {
 	ClusterIP string
-	NodePort  int32
+	NodePort  uint32
 }
 
 func (e *Endpoint) String() string {
