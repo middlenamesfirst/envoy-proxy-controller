@@ -15,7 +15,7 @@ version:
 	@GO111MODULE=on go mod vendor
 
 start-local:
-	docker-compose up --build
+	docker-compose up
 
 stop-local:
 	docker-compose down

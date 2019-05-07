@@ -6,9 +6,17 @@ services:
       - 5678:5678
     volumes:
       - "$HOME/.kube/configs/envoy-proxy-controller:/root/config"
+    networks:
+      - envoy-net
 
   envoy:
     build:
       context: docker-envoy-proxy
     ports:
       - 9901:9901
+    networks:
+      - envoy-net
+
+networks:
+  envoy-net:
+    driver: bridge
