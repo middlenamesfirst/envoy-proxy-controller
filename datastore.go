@@ -21,7 +21,7 @@ func (d *Datastore) GetEndpoints() []*Endpoint {
 	d.RWMutex.RLock()
 	defer d.RWMutex.RUnlock()
 
-	endpoints := make([]*Endpoint, len(d.Endpoints))
+	endpoints := []*Endpoint{}
 
 	for _, e := range d.Endpoints {
 		endpoints = append(endpoints, e)

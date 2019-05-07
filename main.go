@@ -53,7 +53,7 @@ func main() {
 	watcher.Run(ctx, wg)
 
 	go func(d *Datastore, c context.Context) {
-		ticker := time.NewTicker(1 * time.Second)
+		ticker := time.NewTicker(5 * time.Second)
 
 		for {
 			select {
