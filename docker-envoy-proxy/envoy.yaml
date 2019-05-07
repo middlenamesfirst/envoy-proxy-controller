@@ -5,3 +5,42 @@ admin:
       protocol: TCP
       address: 0.0.0.0
       port_value: 9901
+
+node:
+  id: "envoy-proxy-k8s"
+  cluster: "envoy-proxy-k8s"
+
+dynamic_resources:
+  cds_config:
+    api_config_source:
+      api_type: GRPC
+      grpc_services:
+        envoy_grpc:
+          cluster_name: xds_cluster
+  lds_config:
+    api_config_source:
+      api_type: GRPC
+      grpc_services:
+        envoy_grpc:
+          cluster_name: xds_cluster
+
+static_resources:
+  clusters:
+  - name: xds_cluster
+    connect_timeout: 0.25s
+    type: STATIC
+    lb_policy: ROUND_ROBIN
+    http2_protocol_options: {}
+    upstream_connection_options:
+      # configure a TCP keep-alive to detect and reconnect to the admin
+      # server in the event of a TCP socket half open connection
+      tcp_keepalive: {}
+    load_assignment:
+      cluster_name: xds_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 5678
