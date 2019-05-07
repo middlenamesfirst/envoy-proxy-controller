@@ -15,4 +15,4 @@ WORKDIR /root/
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /go/bin/envoy-proxy-controller .
 
-CMD ["./envoy-proxy-controller"]
+CMD ["./envoy-proxy-controller", "--kubeconfig=/root/config/kubeconfig.yaml"]
