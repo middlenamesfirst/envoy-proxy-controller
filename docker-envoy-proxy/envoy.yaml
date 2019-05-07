@@ -28,7 +28,7 @@ static_resources:
   clusters:
   - name: xds_cluster
     connect_timeout: 0.25s
-    type: STATIC
+    type: STRICT_DNS
     lb_policy: ROUND_ROBIN
     http2_protocol_options: {}
     upstream_connection_options:
@@ -42,5 +42,6 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: 127.0.0.1
+                address: envoy-proxy-controller
                 port_value: 5678
+                protocol: TCP

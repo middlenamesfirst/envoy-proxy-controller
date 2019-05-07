@@ -4,7 +4,7 @@ WORKDIR /go/src/github.com/middlenamesfirst/envoy-proxy-controller
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/envoy-proxy-controller .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o /go/bin/envoy-proxy-controller .
 
 FROM alpine:3.9.3@sha256:28ef97b8686a0b5399129e9b763d5b7e5ff03576aa5580d6f4182a49c5fe1913
 
