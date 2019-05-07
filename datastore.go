@@ -10,16 +10,23 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 )
 
+type Logger interface {
+	Infof(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
+}
+
 type Datastore struct {
 	Endpoints     map[string]*Endpoint
 	SnapshotCache cache.SnapshotCache
+	Logger        Logger
 	RWMutex       *sync.RWMutex
 }
 
-func NewDatastore(snapshotCache cache.SnapshotCache) *Datastore {
+func NewDatastore(snapshotCache cache.SnapshotCache, logger Logger) *Datastore {
 	return &Datastore{
 		Endpoints:     map[string]*Endpoint{},
 		SnapshotCache: snapshotCache,
+		Logger:        logger,
 		RWMutex:       &sync.RWMutex{},
 	}
 }
@@ -54,6 +61,8 @@ func (d *Datastore) AddEndpoint(clusterIP string, nodePort int32) {
 		ClusterIP: clusterIP,
 		NodePort:  uint32(nodePort),
 	}
+
+	d.Logger.Infof("Added endpoint %s", addr)
 }
 
 func (d *Datastore) DeleteEndpoint(clusterIP string, nodePort int32) {
@@ -65,6 +74,8 @@ func (d *Datastore) DeleteEndpoint(clusterIP string, nodePort int32) {
 
 	addr := d.makeMapKey(clusterIP, nodePort)
 	delete(d.Endpoints, addr)
+
+	d.Logger.Infof("Deleted endpoint %s", addr)
 }
 
 func (d *Datastore) makeMapKey(clusterIP string, nodePort int32) string {

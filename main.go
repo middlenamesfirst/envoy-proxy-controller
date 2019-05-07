@@ -53,7 +53,7 @@ func main() {
 	}
 
 	snapshotCache := cache.NewSnapshotCache(false, test.Hasher{}, logger)
-	ds := NewDatastore(snapshotCache)
+	ds := NewDatastore(snapshotCache, logger)
 
 	watcher := NewWatcher(ns, listOptions, clientset, ds)
 
